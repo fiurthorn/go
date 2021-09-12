@@ -1,4 +1,4 @@
-module github.com/fiurthorn/tools
+module github.com/fiurthorn/go
 
 go 1.17
 
