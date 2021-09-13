@@ -118,7 +118,7 @@ func goLangExtention() string {
 	case "windows":
 		return "msi"
 	default:
-		log.Fatal(runtime.GOOS + " not supported!")
+		log.Fatalf("%s not supported!", runtime.GOOS)
 		return ""
 	}
 }

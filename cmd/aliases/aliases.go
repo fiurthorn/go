@@ -94,7 +94,7 @@ func main() {
 				continue
 			}
 			wg.Add(1)
-			if alias.Foreground {
+			if subAlias.Foreground {
 				callCommand(subAlias)
 			} else {
 				go callCommand(subAlias)
