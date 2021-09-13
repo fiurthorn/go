@@ -217,7 +217,7 @@ func installMsi(fullpath string) {
 		log.Fatal(err)
 	}
 	log.Printf("%s %s", msiexec, fullpath)
-	_, err = exec.Command(msiexec, "/quiet", "/package", fullpath).CombinedOutput()
+	_, err = exec.Command(msiexec, "/package", fullpath).CombinedOutput()
 	if err != nil {
 		log.Fatal(err)
 	}
