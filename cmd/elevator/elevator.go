@@ -55,7 +55,7 @@ func convert(output []byte, err error) (string, error) {
 func currentDartVersion() string {
 	executable, err := exec.LookPath("dart")
 	if err != nil {
-		log.Panic(err.Error())
+		return "0"
 	}
 	proc := exec.Cmd{Path: executable, Args: []string{executable, "--version"}}
 	outputString, err := convert(proc.CombinedOutput())
@@ -65,12 +65,26 @@ func currentDartVersion() string {
 	outputString = strings.TrimPrefix(string(outputString), "Dart SDK version: ")
 	outputString = strings.Split(outputString, " ")[0]
 	return outputString
+}
+
+func currentGoVersion() string {
+	executable, err := exec.LookPath("go")
+	if err != nil {
+		return "0"
+	}
+	proc := exec.Cmd{Path: executable, Args: []string{executable, "version"}}
+	outputString, err := convert(proc.CombinedOutput())
+	if err != nil {
+		log.Panic(err.Error())
+	}
+	outputString = strings.Split(outputString, " ")[2]
+	return outputString
 
 }
 
 func currentVersion(golang bool) string {
 	if golang {
-		return runtime.Version()
+		return currentGoVersion()
 	}
 
 	return currentDartVersion()
