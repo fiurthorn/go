@@ -90,7 +90,7 @@ func main() {
 		for _, subName := range alias.Aliases {
 			subAlias, exists := aliases[subName]
 			if !exists {
-				log.Panicf("undefined alias '%s'", name)
+				log.Panicf("undefined sub-alias '%s'", subName)
 				continue
 			}
 			wg.Add(1)
