@@ -13,6 +13,7 @@ import (
 	"sync"
 	"syscall"
 
+	"github.com/rivo/tview"
 	"gopkg.in/yaml.v3"
 )
 
@@ -28,6 +29,7 @@ type Command struct {
 	Environment      map[string]string `yaml:"environment"`
 	Foreground       bool              `yaml:"foreground"`
 	Restart          bool              `yaml:"restart"`
+	Shortcut         string            `yaml:"shortcut"`
 
 	Aliases []string `yaml:"aliases"`
 
@@ -61,26 +63,61 @@ func main() {
 		}
 		sort.Strings(keys)
 
-		max := 0
+		app := tview.NewApplication()
+		list := tview.NewList()
+		list.SetBorder(true)
+		list.SetTitle("Select an item")
 		for _, key := range keys {
-			max = Max(max, len(key))
+			name := key
+			alias := aliases[name]
+			list.AddItem(name, alias.Desc, shortcut(alias.Shortcut), func() { app.Stop(); callAlias(name, alias, aliases) })
 		}
-
-		format := fmt.Sprintf("%%-%ds: %%s\n", 1+max)
-		for _, key := range keys {
-			value := aliases[key]
-			log.Printf(format, key, value.Desc)
+		list.AddItem("Quit", "Press to exit", 'q', func() { app.Stop() })
+		if err := app.SetRoot(list, true).EnableMouse(true).Run(); err != nil {
+			panic(err)
 		}
-
-		os.Exit(66)
+		os.Exit(0)
 	}
 
 	name := args[0]
 	alias, exists := aliases[name]
 	if !exists {
-		log.Panicf("undefined alias '%s'", name)
+		describe(aliases)
 	}
 
+	callAlias(name, alias, aliases)
+}
+
+func describe(aliases map[string]Command) {
+	keys := []string{}
+	for k := range aliases {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	max := 0
+	for _, key := range keys {
+		max = Max(max, len(key))
+	}
+
+	format := fmt.Sprintf("%%-%ds: %%s\n", 1+max)
+	for _, key := range keys {
+		value := aliases[key]
+		log.Printf(format, key, value.Desc)
+	}
+
+	os.Exit(66)
+}
+
+func shortcut(value string) rune {
+	if len(value) > 0 {
+		return []rune(value)[0]
+	}
+
+	return ' '
+}
+
+func callAlias(name string, alias Command, aliases map[string]Command) {
 	processes := []Command{}
 	if alias.Aliases == nil {
 		wg.Add(1)
