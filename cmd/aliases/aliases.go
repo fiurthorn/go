@@ -147,7 +147,9 @@ func callAlias(name string, alias Command, aliases map[string]Command) {
 		log.Printf("Caught SIGTERM %v", sig)
 		for _, command := range processes {
 			command.Restart = false
-			command.process.Process.Signal(syscall.SIGKILL)
+			if command.process != nil {
+				command.process.Process.Signal(syscall.SIGKILL)
+			}
 		}
 	}()
 
