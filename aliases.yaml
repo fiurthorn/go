@@ -22,3 +22,18 @@ echo-123:
   argsArray:
     - a
     - b
+
+sleep-40:
+  command: sleep
+  background: true
+  args: 40
+
+sleep-20:
+  command: sleep
+  background: true
+  args: 20
+
+sleep:
+  aliases:
+    - sleep-20
+    - sleep-40

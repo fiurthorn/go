@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strings"
 	"sync"
@@ -23,6 +24,7 @@ func init() {
 }
 
 type Command struct {
+	Name             string
 	Desc             string            `yaml:"desc"`
 	Command          string            `yaml:"command"`
 	Args             string            `yaml:"args"`
@@ -138,46 +140,62 @@ func shortcut(value string) rune {
 }
 
 func callAlias(name string, alias Command, aliases map[string]Command) {
-	processes := []Command{}
-	if alias.Aliases == nil {
-		wg.Add(1)
-		callCommand(alias)
-		processes = append(processes, alias)
-	} else {
-		for _, subName := range alias.Aliases {
-			subAlias, exists := aliases[subName]
-			if !exists {
-				log.Panicf("undefined sub-alias '%s'", subName)
-				continue
-			}
-			wg.Add(1)
-			if !subAlias.Background {
-				callCommand(subAlias)
-			} else {
-				go callCommand(subAlias)
-			}
-			processes = append(processes, subAlias)
-		}
-	}
+	alias.Name = name
+	processes := []*Command{}
+	working := true
 
 	go func() {
 		cancelChan := make(chan os.Signal, 1)
 		signal.Notify(cancelChan, syscall.SIGTERM, syscall.SIGINT)
 		sig := <-cancelChan
-		log.Printf("Caught SIGTERM %v", sig)
+		wg.Add(1)
+		working = false
+		log.Printf("\rCaught signal %v for %d processes", sig, len(processes))
 		for _, command := range processes {
 			command.Restart = false
 			if command.process != nil {
-				command.process.Process.Signal(syscall.SIGKILL)
+				if runtime.GOOS == "windows" {
+					log.Printf("send sigint to '%v'", command.Name)
+					command.process.Process.Signal(syscall.SIGINT)
+				} else {
+					log.Printf("send sigterm to '%v'", command.Name)
+					command.process.Process.Signal(syscall.SIGTERM)
+				}
+				// wg.Done()
 			}
 		}
+		wg.Done()
 	}()
+
+	if alias.Aliases == nil {
+		wg.Add(1)
+		callCommand(&alias)
+		processes = append(processes, &alias)
+	} else {
+		for _, subName := range alias.Aliases {
+			if working {
+				subAlias, exists := aliases[subName]
+				if !exists {
+					log.Panicf("undefined sub-alias '%s'", subName)
+					continue
+				}
+				subAlias.Name = subName
+				wg.Add(1)
+				if !subAlias.Background {
+					callCommand(&subAlias)
+				} else {
+					go callCommand(&subAlias)
+				}
+				processes = append(processes, &subAlias)
+			}
+		}
+	}
 
 	wg.Wait()
 	os.Exit(0)
 }
 
-func buildCommandAndArgs(alias Command) (string, []string) {
+func buildCommandAndArgs(alias *Command) (string, []string) {
 	executable, err := exec.LookPath(alias.Command)
 	if err != nil {
 		log.Panic(err.Error())
@@ -211,7 +229,7 @@ func buildCommandAndArgs(alias Command) (string, []string) {
 	return executable, tail
 }
 
-func callCommand(alias Command) {
+func callCommand(alias *Command) {
 	for {
 		env := os.Environ()
 		for key, value := range alias.Environment {
