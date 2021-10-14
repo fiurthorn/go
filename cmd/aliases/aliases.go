@@ -24,10 +24,12 @@ func init() {
 
 type Command struct {
 	Desc             string            `yaml:"desc"`
-	Command          []string          `yaml:"command"`
+	Command          string            `yaml:"command"`
+	Args             string            `yaml:"args"`
+	Array            []string          `yaml:"argsArray"`
 	WorkingDirectory string            `yaml:"workingDirectory"`
 	Environment      map[string]string `yaml:"environment"`
-	Foreground       bool              `yaml:"foreground"`
+	Background       bool              `yaml:"background"`
 	Restart          bool              `yaml:"restart"`
 	Shortcut         string            `yaml:"shortcut"`
 
@@ -56,7 +58,9 @@ func main() {
 	var aliases = map[string]Command{}
 	yaml.Unmarshal(stream, aliases)
 
-	if len(args) == 0 {
+	cmd, filter := getFilter(args)
+
+	if filter {
 		keys := []string{}
 		for k := range aliases {
 			keys = append(keys, k)
@@ -68,9 +72,11 @@ func main() {
 		list.SetBorder(true)
 		list.SetTitle("Select an item")
 		for _, key := range keys {
-			name := key
-			alias := aliases[name]
-			list.AddItem(name, alias.Desc, shortcut(alias.Shortcut), func() { app.Stop(); callAlias(name, alias, aliases) })
+			if strings.HasPrefix(key, cmd) {
+				name := key
+				alias := aliases[name]
+				list.AddItem(name, alias.Desc, shortcut(alias.Shortcut), func() { app.Stop(); fmt.Println("$ aliases", name); callAlias(name, alias, aliases) })
+			}
 		}
 		list.AddItem("Quit", "Press to exit", 'q', func() { app.Stop() })
 		if err := app.SetRoot(list, true).EnableMouse(true).Run(); err != nil {
@@ -79,13 +85,27 @@ func main() {
 		os.Exit(0)
 	}
 
-	name := args[0]
-	alias, exists := aliases[name]
+	alias, exists := aliases[cmd]
 	if !exists {
 		describe(aliases)
 	}
 
-	callAlias(name, alias, aliases)
+	callAlias(cmd, alias, aliases)
+}
+
+func getFilter(args []string) (string, bool) {
+	if len(args) == 0 {
+		return "", true
+	}
+
+	name := args[0]
+	filter := name[len(name)-1] == '*'
+	if filter {
+		name = name[0 : len(name)-1]
+	}
+
+	return name, filter
+
 }
 
 func describe(aliases map[string]Command) {
@@ -131,7 +151,7 @@ func callAlias(name string, alias Command, aliases map[string]Command) {
 				continue
 			}
 			wg.Add(1)
-			if subAlias.Foreground {
+			if !subAlias.Background {
 				callCommand(subAlias)
 			} else {
 				go callCommand(subAlias)
@@ -157,6 +177,40 @@ func callAlias(name string, alias Command, aliases map[string]Command) {
 	os.Exit(0)
 }
 
+func buildCommandAndArgs(alias Command) (string, []string) {
+	executable, err := exec.LookPath(alias.Command)
+	if err != nil {
+		log.Panic(err.Error())
+	}
+	tail := []string{executable}
+
+	var quote rune = 0
+	word := strings.Builder{}
+
+	for _, char := range alias.Args {
+		if (char == '"' || char == '\'') && quote != 0 && char == quote {
+			quote = 0
+		} else if (char == '"' || char == '\'') && quote == 0 {
+			quote = char
+		} else if char == ' ' && word.Len() > 0 && quote == 0 {
+			tail = append(tail, word.String())
+			word.Reset()
+		} else {
+			word.WriteRune(char)
+		}
+	}
+
+	if word.Len() > 0 {
+		tail = append(tail, word.String())
+	}
+
+	if len(alias.Array) > 0 {
+		tail = append(tail, alias.Array...)
+	}
+
+	return executable, tail
+}
+
 func callCommand(alias Command) {
 	for {
 		env := os.Environ()
@@ -164,15 +218,8 @@ func callCommand(alias Command) {
 			env = append(env, fmt.Sprintf("%s=%s", key, value))
 		}
 
-		command := alias.Command[0]
-		tail := alias.Command[:]
-		executable, err := exec.LookPath(command)
-		if err != nil {
-			log.Panic(err.Error())
-		}
-		tail[0] = executable
-
-		workingDir, _ := os.Getwd()
+		executable, args := buildCommandAndArgs(alias)
+		workingDir, err := os.Getwd()
 		if err != nil {
 			log.Panic(err.Error())
 		}
@@ -183,7 +230,7 @@ func callCommand(alias Command) {
 
 		alias.process = &exec.Cmd{
 			Path:   executable,
-			Args:   tail,
+			Args:   args,
 			Env:    env,
 			Stdout: os.Stdout,
 			Stderr: os.Stderr,
@@ -193,7 +240,7 @@ func callCommand(alias Command) {
 		log.Printf("$ '%s' in %+v with %+v %v", strings.Join(alias.process.Args, "' '"), alias.process.Dir, alias.Environment, ab(alias.Restart, "restart", ""))
 		alias.process.Start()
 
-		if alias.Foreground || alias.Restart {
+		if !alias.Background || alias.Restart {
 			waitProc(alias.process)
 			if !alias.Restart {
 				break

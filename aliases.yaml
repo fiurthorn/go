@@ -2,26 +2,23 @@ both:
   shortcut: 1
   desc: "execute both"
   aliases:
-    - echo-123
     - dir
+    - echo-123
 
 dir:
   desc: other text
   shortcut: 2
-  foreground: true
   workingDirectory: cmd
-  command:
-    - cmd
-    - /c
-    - dir
+  command: cmd
+  args: /c dir
 
 echo-123:
   desc: useful text
   shortcut: 3
   environment:
     VALUE: 123
-  command:
-    - cmd
-    - /c
-    - echo
-    - "%VALUE%"
+  command: cmd
+  args: '/c echo "%VALUE%"'
+  argsArray:
+    - a
+    - b
