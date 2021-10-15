@@ -13,6 +13,7 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+	"time"
 
 	"github.com/rivo/tview"
 	"gopkg.in/yaml.v3"
@@ -47,7 +48,10 @@ func Max(a, b int) int {
 	return b
 }
 
-var wg sync.WaitGroup
+var (
+	wg      sync.WaitGroup
+	stopped bool
+)
 
 func main() {
 	args := os.Args[1:]
@@ -139,33 +143,46 @@ func shortcut(value string) rune {
 	return ' '
 }
 
-func callAlias(name string, alias Command, aliases map[string]Command) {
-	alias.Name = name
-	processes := []*Command{}
-	working := true
+func signalHandler(processes *[]*Command) {
+	cancelChan := make(chan os.Signal, 1)
+	signal.Notify(cancelChan, syscall.SIGTERM, syscall.SIGINT)
+	sig := <-cancelChan
+	wg.Add(1)
+	stopped = true
+	log.Printf("\rCaught signal %v for %d processes", sig, len(*processes))
 
-	go func() {
-		cancelChan := make(chan os.Signal, 1)
-		signal.Notify(cancelChan, syscall.SIGTERM, syscall.SIGINT)
-		sig := <-cancelChan
-		wg.Add(1)
-		working = false
-		log.Printf("\rCaught signal %v for %d processes", sig, len(processes))
-		for _, command := range processes {
-			command.Restart = false
-			if command.process != nil {
-				if runtime.GOOS == "windows" {
-					log.Printf("send sigint to '%v'", command.Name)
-					command.process.Process.Signal(syscall.SIGINT)
-				} else {
-					log.Printf("send sigterm to '%v'", command.Name)
-					command.process.Process.Signal(syscall.SIGTERM)
-				}
-				// wg.Done()
+	for _, command := range *processes {
+		command.Restart = false
+		if command.process != nil {
+			if runtime.GOOS == "windows" {
+				log.Printf("send sigint to '%v'", command.Name)
+				command.process.Process.Signal(syscall.SIGINT)
+			} else {
+				log.Printf("send sigterm to '%v'", command.Name)
+				command.process.Process.Signal(syscall.SIGTERM)
 			}
 		}
-		wg.Done()
-	}()
+	}
+
+	log.Printf("Wait 5 Sec to stop")
+	time.Sleep(5 * time.Second)
+	for _, command := range *processes {
+		if command.process != nil && command.process.ProcessState != nil && !command.process.ProcessState.Exited() {
+			log.Printf("send %s to '%v'", syscall.SIGKILL.String(), command.Name)
+			command.process.Process.Signal(syscall.SIGKILL)
+		}
+	}
+
+	wg.Done()
+}
+
+func callAlias(name string, alias Command, aliases map[string]Command) {
+	log.SetPrefix("[aliases] ")
+
+	alias.Name = name
+	processes := []*Command{}
+
+	go signalHandler(&processes)
 
 	if alias.Aliases == nil {
 		wg.Add(1)
@@ -173,7 +190,7 @@ func callAlias(name string, alias Command, aliases map[string]Command) {
 		processes = append(processes, &alias)
 	} else {
 		for _, subName := range alias.Aliases {
-			if working {
+			if !stopped {
 				subAlias, exists := aliases[subName]
 				if !exists {
 					log.Panicf("undefined sub-alias '%s'", subName)
@@ -252,10 +269,16 @@ func callCommand(alias *Command) {
 			Env:    env,
 			Stdout: os.Stdout,
 			Stderr: os.Stderr,
-			Stdin:  os.Stdin,
 			Dir:    workingDir,
 		}
-		log.Printf("$ '%s' in %+v with %+v %v", strings.Join(alias.process.Args, "' '"), alias.process.Dir, alias.Environment, ab(alias.Restart, "restart", ""))
+
+		executable = strings.ToLower(executable)
+		if !(strings.HasSuffix(executable, "cmd") || strings.HasSuffix(executable, "bat")) {
+			alias.process.Stdin = os.Stdin
+		} else {
+			log.Printf("don't inherit Stdin to %s", executable)
+		}
+		log.Printf("$ '%s' in %+v with %+v %v [%v]", strings.Join(alias.process.Args, "' '"), alias.process.Dir, alias.Environment, ab(alias.Restart, "restart", ""), ab(alias.Background, "bg", "fg"))
 		alias.process.Start()
 
 		if !alias.Background || alias.Restart {
@@ -263,7 +286,9 @@ func callCommand(alias *Command) {
 			if !alias.Restart {
 				break
 			}
-			alias.process.Process.Kill()
+			if alias.process != nil && alias.process.ProcessState != nil && !alias.process.ProcessState.Exited() {
+				alias.process.Process.Kill()
+			}
 		} else {
 			go waitProc(alias.process)
 			break
