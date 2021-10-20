@@ -1,19 +1,19 @@
 both:
   shortcut: 1
-  desc: "execute both"
+  desc: "execute both dir and echo-123"
   aliases:
     - dir
     - echo-123
 
 dir:
-  desc: other text
+  intern: other text
   shortcut: 2
   workingDirectory: cmd
   command: cmd
   args: /c dir
 
 echo-123:
-  desc: useful text
+  intern: useful text
   shortcut: 3
   environment:
     VALUE: 123
@@ -34,6 +34,7 @@ sleep-20:
   args: 20
 
 sleep:
+  desc: sleep a time
   aliases:
     - sleep-20
     - sleep-40

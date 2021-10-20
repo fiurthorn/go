@@ -27,6 +27,7 @@ func init() {
 type Command struct {
 	Name             string
 	Desc             string            `yaml:"desc"`
+	Intern           string            `yaml:"intern"`
 	Command          string            `yaml:"command"`
 	Args             string            `yaml:"args"`
 	Array            []string          `yaml:"argsArray"`
@@ -68,8 +69,10 @@ func main() {
 
 	if filter {
 		keys := []string{}
-		for k := range aliases {
-			keys = append(keys, k)
+		for k, v := range aliases {
+			if len(v.Desc) > 0 {
+				keys = append(keys, k)
+			}
 		}
 		sort.Strings(keys)
 
@@ -116,8 +119,10 @@ func getFilter(args []string) (string, bool) {
 
 func describe(aliases map[string]Command) {
 	keys := []string{}
-	for k := range aliases {
-		keys = append(keys, k)
+	for k, v := range aliases {
+		if len(v.Desc) > 0 {
+			keys = append(keys, k)
+		}
 	}
 	sort.Strings(keys)
 
