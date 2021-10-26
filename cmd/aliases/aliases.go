@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -15,6 +16,8 @@ import (
 	"syscall"
 	"time"
 
+	_ "embed"
+
 	"github.com/rivo/tview"
 	"gopkg.in/yaml.v3"
 )
@@ -24,10 +27,12 @@ func init() {
 	log.SetFlags(0)
 }
 
+//go:embed aliases.yaml
+var template []byte
+
 type Command struct {
 	Name             string
 	Desc             string            `yaml:"desc"`
-	Intern           string            `yaml:"intern"`
 	Command          string            `yaml:"command"`
 	Args             string            `yaml:"args"`
 	Array            []string          `yaml:"argsArray"`
@@ -50,14 +55,28 @@ func Max(a, b int) int {
 }
 
 var (
-	wg      sync.WaitGroup
-	stopped bool
+	wg       sync.WaitGroup
+	stopped  bool
+	yamlFile string = "aliases.yaml"
 )
 
 func main() {
+	if _, err := os.Stat(yamlFile); errors.Is(err, os.ErrNotExist) {
+		app := tview.NewApplication()
+		list := tview.NewList()
+		list.SetBorder(true)
+		list.SetTitle("Select an item")
+		list.AddItem("Example", "Write example file?", 'y', func() { ioutil.WriteFile(yamlFile, template, 0666); app.Stop() })
+		list.AddItem("Quit", "Press to exit", 'q', func() { app.Stop() })
+		if err := app.SetRoot(list, true).EnableMouse(true).Run(); err != nil {
+			panic(err)
+		}
+		os.Exit(0)
+	}
+
 	args := os.Args[1:]
 
-	stream, err := ioutil.ReadFile("aliases.yaml")
+	stream, err := ioutil.ReadFile(yamlFile)
 	if err != nil {
 		log.Panic(err.Error())
 	}

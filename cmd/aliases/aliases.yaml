@@ -1,0 +1,51 @@
+# Template aliases.yaml file
+multi-target:
+  # shortcut for the menu
+  shortcut: m
+  desc: "execute target-one and target-two"
+  # brief description of the job, hidden in the menu if empty
+  # name of none aliases targets
+  aliases:
+    - target-one
+    - target-two
+
+# target name
+target-one:
+  shortcut: 1
+  desc: example job one
+
+  # the executable detectable on the System PATH or with full path
+  command: echo
+
+  # command line arguments appended to the executable command
+  args: "1 2 3"
+
+  # array of arguments appended to args command line
+  argsArray:
+    - 4
+    - 5
+    - 6
+
+  # key-value map of additional environment variable to the process
+  environment:
+    key: value
+
+  # background job runs along other processes, if not the process is blocking other to start
+  background: false
+
+  # useful for background job, if the should restart after exiting
+  restart: false
+
+target-two:
+  desc: example job two
+  shortcut: 2
+  command: echo
+  args: "a b c"
+  argsArray:
+    - d
+    - e
+    - f
+  environment:
+    key: value
+  background: false
+  restart: false
