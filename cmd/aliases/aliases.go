@@ -247,7 +247,7 @@ func buildCommandAndArgs(alias *Command) (string, []string) {
 	word := strings.Builder{}
 
 	for _, char := range alias.Args {
-		if (char == '"' || char == '\'') && quote != 0 && char == quote {
+		if quote != 0 && char == quote {
 			quote = 0
 		} else if (char == '"' || char == '\'') && quote == 0 {
 			quote = char
