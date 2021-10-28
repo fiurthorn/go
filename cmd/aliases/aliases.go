@@ -47,6 +47,8 @@ type Command struct {
 	process *exec.Cmd
 }
 
+var Restart bool = true
+
 func Max(a, b int) int {
 	if a >= b {
 		return a
@@ -175,6 +177,7 @@ func signalHandler(processes *[]*Command) {
 	stopped = true
 	log.Printf("\rCaught signal %v for %d processes", sig, len(*processes))
 
+	Restart = false
 	for _, command := range *processes {
 		command.Restart = false
 		if command.process != nil {
@@ -302,12 +305,12 @@ func callCommand(alias *Command) {
 		} else {
 			log.Printf("don't inherit Stdin to %s", executable)
 		}
-		log.Printf("$ '%s' in %+v with %+v %v [%v]", strings.Join(alias.process.Args, "' '"), alias.process.Dir, alias.Environment, ab(alias.Restart, "restart", ""), ab(alias.Background, "bg", "fg"))
+		log.Printf("$ '%s' in %+v with %+v %v [%v]", strings.Join(alias.process.Args, "' '"), alias.process.Dir, alias.Environment, ab(alias.Restart && Restart, "restart", ""), ab(alias.Background, "bg", "fg"))
 		alias.process.Start()
 
-		if !alias.Background || alias.Restart {
+		if !alias.Background || (alias.Restart && Restart) {
 			waitProc(alias.process)
-			if !alias.Restart {
+			if !Restart || !alias.Restart {
 				break
 			}
 			if alias.process != nil && alias.process.ProcessState != nil && !alias.process.ProcessState.Exited() {
