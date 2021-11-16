@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -26,6 +27,8 @@ type UserCreateEvent struct {
 
 func main() {
 	l := &L{}
+
+	fmt.Println("")
 
 	d := lib.NewDispatcher()
 
