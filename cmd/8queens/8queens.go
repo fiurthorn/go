@@ -7,13 +7,6 @@ import (
 )
 
 type Fields [64]rune
-type Position struct{ X, Y int }
-
-type Solution []Position
-
-func (x Solution) Len() int           { return len(x) }
-func (x Solution) Less(i, j int) bool { return x[i].X < x[j].X }
-func (x Solution) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
 
 func NewFields() *Fields {
 	f := Fields{}
@@ -21,6 +14,13 @@ func NewFields() *Fields {
 		f[i] = ' '
 	}
 	return &f
+}
+
+func (f *Fields) Draw(sol Solution) *Fields {
+	for _, s := range sol {
+		f[index(s)] = 'Q'
+	}
+	return f
 }
 
 func (f *Fields) String() string {
@@ -38,44 +38,152 @@ func (f *Fields) String() string {
 	return sb.String()
 }
 
-var (
-	n      = 8
-	m      = n - 1
-	fields = NewFields()
+type Position struct{ X, Y int }
+type Solution []Position
 
-	solution = Solution{}
-	uniq     = []Solution{}
-	all      = []Solution{}
-
-	counter   int
-	solutions int
-)
-
-func main() {
-	log.Println(fields)
-	set(0)
-	log.Printf("fields %v %v %v", counter, solutions, fields)
-	log.Println(all)
+func (x Solution) Len() int           { return len(x) }
+func (x Solution) Less(i, j int) bool { return x[i].X < x[j].X }
+func (x Solution) Swap(i, j int)      { x[i], x[j] = x[j], x[i] }
+func (x Solution) Dup() Solution {
+	d := make(Solution, len(x))
+	copy(d, x)
+	return d
 }
 
-func dup(obj Solution) Solution {
-	d := make(Solution, len(obj))
-	copy(d, obj)
+func (x Solution) Equals(o Solution) bool {
+	if len(x) != len(o) {
+		return false
+	}
 
+	for i, length := 0, len(x); i < length; i++ {
+		if x[i] != o[i] {
+			return false
+		}
+	}
+
+	return true
+}
+
+type Solutions struct{ data []Solution }
+
+func (x *Solutions) Store(sol Solution) {
+	d := sol.Dup()
+	sort.Sort(d)
+	x.data = append(x.data, d)
+}
+
+type Uniq struct{ data []Solution }
+
+func (x *Uniq) Store(sol Solution) {
+	r := x.variations(sol)
+	for _, i := range x.data {
+		if x.equals(i, r) {
+			return
+		}
+	}
+	x.data = append(x.data, r[0])
+}
+
+func (x *Uniq) equals(i Solution, r [8]Solution) bool {
+	return i.Equals(r[0]) || i.Equals(r[1]) ||
+		i.Equals(r[2]) || i.Equals(r[3]) ||
+		i.Equals(r[4]) || i.Equals(r[5]) ||
+		i.Equals(r[6]) || i.Equals(r[7])
+}
+
+func (x *Uniq) variations(sol Solution) (result [8]Solution) {
+	result[0] = sol.Dup()
+	sort.Sort(result[0])
+	result[1] = x.mirror1(sol)
+	result[2] = x.mirror2(sol)
+	result[3] = x.mirror3(sol)
+	result[4] = x.mirror4(sol)
+	result[5] = x.rotate(sol)
+	result[6] = x.rotate(result[5])
+	result[7] = x.rotate(result[6])
+	return
+}
+
+func (x *Uniq) rotate(sol Solution) Solution {
+	d := sol.Dup()
+	for i := 0; i < n; i++ {
+		c := complex(float32(d[i].X)-q, float32(d[i].Y)-q) * 1i
+		d[i].X, d[i].Y = int(real(c)+q), int(imag(c)+q)
+	}
 	sort.Sort(d)
 	return d
 }
 
+func (x *Uniq) mirror1(sol Solution) Solution {
+	d := sol.Dup()
+	for i := 0; i < n; i++ {
+		d[i].X = m - d[i].X
+	}
+	sort.Sort(d)
+	return d
+}
+
+func (x *Uniq) mirror2(sol Solution) Solution {
+	d := sol.Dup()
+	for i := 0; i < n; i++ {
+		d[i].Y = m - d[i].Y
+	}
+	sort.Sort(d)
+	return d
+}
+
+func (x *Uniq) mirror3(sol Solution) Solution {
+	d := sol.Dup()
+	for i := 0; i < n; i++ {
+		d[i].X, d[i].Y = m-d[i].Y, m-d[i].X
+	}
+	sort.Sort(d)
+	return d
+}
+
+func (x *Uniq) mirror4(sol Solution) Solution {
+	d := sol.Dup()
+	for i := 0; i < n; i++ {
+		d[i].X, d[i].Y = d[i].Y, d[i].X
+	}
+	sort.Sort(d)
+	return d
+}
+
+var (
+	n      = 8
+	m      = n - 1
+	q      = float32(m) / 2
+	fields = NewFields()
+
+	solution = Solution{}
+	uniq     = Uniq{}
+	all      = Solutions{}
+
+	iterationCount int
+	solutionCount  int
+)
+
+func main() {
+	// log.Println(fields)
+	set(0)
+	for _, u := range uniq.data {
+		log.Println(NewFields().Draw(u))
+	}
+	log.Printf("result %v %v %v %v", iterationCount, solutionCount, len(all.data), len(uniq.data))
+}
+
 func set(y int) {
 	if y >= n {
-		solutions++
-		all = append(all, dup(solution))
-		log.Printf("fields %v %v %v", counter, solutions, fields)
+		solutionCount++
+		all.Store(solution)
+		uniq.Store(solution)
+		// log.Printf("solution %v %v", iterationCount, solutionCount)
 		return
 	}
 
 	for x := 0; x < n; x++ {
-		counter++
+		iterationCount++
 		pos := Position{x, y}
 		if !underAttack(pos) {
 			fields[index(pos)] = 'Q'
