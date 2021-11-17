@@ -4,13 +4,21 @@ import (
 	"log"
 	"sort"
 	"strings"
+	"sync"
+	"time"
 )
 
-type Fields [64]rune
+const (
+	n = 14
+	m = n - 1
+	q = float32(m) / 2
+)
+
+type Fields []rune
 
 func NewFields() *Fields {
-	f := Fields{}
-	for i := 0; i < 64; i++ {
+	f := make(Fields, n*n)
+	for i, l := 0, len(f); i < l; i++ {
 		f[i] = ' '
 	}
 	return &f
@@ -18,18 +26,24 @@ func NewFields() *Fields {
 
 func (f *Fields) Draw(sol Solution) *Fields {
 	for _, s := range sol {
-		f[index(s)] = 'Q'
+		(*f)[index(s)] = 'Q'
 	}
 	return f
 }
 
+var lineal = []rune("0123456789abcdefghijklmnopqrstuvwxyz")
+
 func (f *Fields) String() string {
 	sb := strings.Builder{}
 
-	sb.WriteString("\ny x01234567\n")
+	sb.WriteString("\ny x")
 	for i := 0; i < n; i++ {
-		line := f[n*i : n+n*i]
-		sb.WriteString(string(rune('0' + i)))
+		sb.WriteRune(lineal[i])
+	}
+	sb.WriteString("\n")
+	for i := 0; i < n; i++ {
+		line := (*f)[n*i : n+n*i]
+		sb.WriteRune(lineal[i])
 		sb.WriteString("  ")
 		sb.WriteString(string(line))
 		sb.WriteRune('\n')
@@ -72,26 +86,41 @@ func (x *Solutions) Store(sol Solution) {
 	x.data = append(x.data, d)
 }
 
-type Uniq struct{ data []Solution }
+type Uniq struct {
+	data  []Solution
+	queue chan Solution
+	lock  sync.Mutex
+}
 
-func (x *Uniq) Store(sol Solution) {
+func (x *Uniq) Start() {
+	for sol := range x.queue {
+		x.store(sol)
+	}
+}
+
+func (x *Uniq) Stop() { close(x.queue) }
+
+func (x *Uniq) store(sol Solution) {
 	r := x.variations(sol)
 	for _, i := range x.data {
 		if x.equals(i, r) {
 			return
 		}
 	}
+	x.lock.Lock()
 	x.data = append(x.data, r[0])
+	x.lock.Unlock()
 }
 
-func (x *Uniq) equals(i Solution, r [8]Solution) bool {
+func (x *Uniq) equals(i Solution, r []Solution) bool {
 	return i.Equals(r[0]) || i.Equals(r[1]) ||
 		i.Equals(r[2]) || i.Equals(r[3]) ||
 		i.Equals(r[4]) || i.Equals(r[5]) ||
 		i.Equals(r[6]) || i.Equals(r[7])
 }
 
-func (x *Uniq) variations(sol Solution) (result [8]Solution) {
+func (x *Uniq) variations(sol Solution) (result []Solution) {
+	result = make([]Solution, 8)
 	result[0] = sol.Dup()
 	sort.Sort(result[0])
 	result[1] = x.mirror1(sol)
@@ -151,13 +180,10 @@ func (x *Uniq) mirror4(sol Solution) Solution {
 }
 
 var (
-	n      = 8
-	m      = n - 1
-	q      = float32(m) / 2
 	fields = NewFields()
 
 	solution = Solution{}
-	uniq     = Uniq{}
+	uniq     = Uniq{queue: make(chan Solution, 100)}
 	all      = Solutions{}
 
 	iterationCount int
@@ -165,19 +191,26 @@ var (
 )
 
 func main() {
-	// log.Println(fields)
+	go uniq.Start()
+	go uniq.Start()
+	go uniq.Start()
+	go uniq.Start()
+	go uniq.Start()
+	start := time.Now()
 	set(0)
-	for _, u := range uniq.data {
-		log.Println(NewFields().Draw(u))
-	}
-	log.Printf("result %v %v %v %v", iterationCount, solutionCount, len(all.data), len(uniq.data))
+	uniq.Stop()
+	// for _, u := range uniq.data {
+	// 	log.Println(NewFields().Draw(u))
+	// }
+	duration := time.Since(start)
+	log.Printf("result %s %v %v %v %v", duration, iterationCount, solutionCount, len(all.data), len(uniq.data))
 }
 
 func set(y int) {
 	if y >= n {
 		solutionCount++
 		all.Store(solution)
-		uniq.Store(solution)
+		uniq.store(solution)
 		// log.Printf("solution %v %v", iterationCount, solutionCount)
 		return
 	}
@@ -186,11 +219,11 @@ func set(y int) {
 		iterationCount++
 		pos := Position{x, y}
 		if !underAttack(pos) {
-			fields[index(pos)] = 'Q'
+			(*fields)[index(pos)] = 'Q'
 			solution = append(solution, Position{x, y})
 			set(y + 1)
 			solution = solution[:len(solution)-1]
-			fields[index(pos)] = ' '
+			(*fields)[index(pos)] = ' '
 		}
 	}
 }
@@ -203,19 +236,12 @@ func underAttack(pos Position) bool {
 	positions = append(positions, dia2(pos)...)
 
 	for _, pos := range positions {
-		if fields[index(pos)] == 'Q' {
+		if (*fields)[index(pos)] == 'Q' {
 			return true
 		}
 	}
 
 	return false
-}
-
-func draw(fields *Fields, positions []Position) *Fields {
-	for _, pos := range positions {
-		fields[index(pos)] = 'Q'
-	}
-	return fields
 }
 
 func line1(xy Position) (pos []Position) {
