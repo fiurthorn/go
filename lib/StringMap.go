@@ -55,3 +55,12 @@ func (m *StringMap) String() string {
 	}
 	return fmt.Sprintf("StringMap[%s]", strings.Join(values, ", "))
 }
+
+func (m StringMap) Len() int {
+	return len(m)
+}
+
+func (m StringMap) Has(value string) bool {
+	_, ok := m[value]
+	return ok
+}

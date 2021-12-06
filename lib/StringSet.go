@@ -15,11 +15,21 @@ func NewStringSet() *StringSet {
 	return &StringSet{}
 }
 
+func NewStringSetWith(keys ...string) *StringSet {
+	s := &StringSet{}
+
+	for _, key := range keys {
+		s.Add(key)
+	}
+
+	return s
+}
+
 func (m *StringSet) Remove(key string) {
 	delete(*m, key)
 }
 
-func (m *StringSet) Add(key, value string) {
+func (m *StringSet) Add(key string) {
 	(*m)[key] = empty
 }
 
@@ -39,4 +49,13 @@ func (m *StringSet) SortedValues() []string {
 
 func (m *StringSet) String() string {
 	return fmt.Sprintf("StringSet[%s]", strings.Join(m.Values(), ", "))
+}
+
+func (m StringSet) Len() int {
+	return len(m)
+}
+
+func (m StringSet) Has(value string) bool {
+	_, ok := m[value]
+	return ok
 }
