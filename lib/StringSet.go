@@ -51,11 +51,11 @@ func (m *StringSet) String() string {
 	return fmt.Sprintf("StringSet[%s]", strings.Join(m.Values(), ", "))
 }
 
-func (m StringSet) Len() int {
-	return len(m)
+func (m *StringSet) Len() int {
+	return len(*m)
 }
 
-func (m StringSet) Has(value string) bool {
-	_, ok := m[value]
+func (m *StringSet) Has(value string) bool {
+	_, ok := (*m)[value]
 	return ok
 }
