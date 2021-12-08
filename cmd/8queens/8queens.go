@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	n = 14
+	n = 8
 	m = n - 1
 	q = float32(m) / 2
 )
@@ -92,9 +92,13 @@ type Uniq struct {
 	lock  sync.Mutex
 }
 
-func (x *Uniq) Start() {
-	for sol := range x.queue {
-		x.store(sol)
+func (x *Uniq) Start(count int) {
+	for i := 0; i < count; i++ {
+		go func() {
+			for sol := range x.queue {
+				x.store(sol)
+			}
+		}()
 	}
 }
 
@@ -191,17 +195,13 @@ var (
 )
 
 func main() {
-	go uniq.Start()
-	go uniq.Start()
-	go uniq.Start()
-	go uniq.Start()
-	go uniq.Start()
+	uniq.Start(5)
 	start := time.Now()
 	set(0)
 	uniq.Stop()
-	// for _, u := range uniq.data {
-	// 	log.Println(NewFields().Draw(u))
-	// }
+	for _, u := range uniq.data {
+		log.Println(NewFields().Draw(u))
+	}
 	duration := time.Since(start)
 	log.Printf("result %s %v %v %v %v", duration, iterationCount, solutionCount, len(all.data), len(uniq.data))
 }
