@@ -123,6 +123,8 @@ github.com/timshannon/badgerhold/v3 v3.0.0-20210909134927-2b6764d68c1e/go.mod h1
 github.com/timshannon/badgerhold/v4 v4.0.1 h1:+Y0BUPeafOQTwPcaEqhQ9i7/L5fjmg2TZoci//eUgF4=
 github.com/timshannon/badgerhold/v4 v4.0.1/go.mod h1:rh6RyXLQFsvrvcKondPQQFZnNovpRzu+gS0FlLxYuHY=
 github.com/ugorji/go/codec v0.0.0-20181204163529-d75b2dcb6bc8/go.mod h1:VFNgLljTbGfSG7qAOspJ7OScBnGdDN/yBr0sguwnwf0=
+github.com/westphae/quaternion v0.0.0-20210908005042-fa06d546065c h1:IxoxQQ3RVVii9zMCzUDWL4RZ5HOW1u6VmVGMm3nx6Rc=
+github.com/westphae/quaternion v0.0.0-20210908005042-fa06d546065c/go.mod h1:MbIXKXI9LGjgzStrcPZ2teUcfc/1++c7vyCWPg0xvZU=
 github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77/go.mod h1:aYKd//L2LvnjZzWKhF00oedf4jCCReLcmhLdhm1A27Q=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=

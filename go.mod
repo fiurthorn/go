@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/rivo/tview v0.0.0-20211001102648-5508f4b00266
 	github.com/timshannon/badgerhold/v4 v4.0.1
+	github.com/westphae/quaternion v0.0.0-20210908005042-fa06d546065c
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 )
