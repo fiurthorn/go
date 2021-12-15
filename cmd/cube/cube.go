@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"math/rand"
 	"sort"
 	"strings"
 	"time"
@@ -89,9 +90,10 @@ var (
 	ZMinus = quaternion.FromEuler(0, 0, -math.Pi/2)
 )
 
-type Rotatable interface {
+type CubeTile interface {
 	Rotate(turn quaternion.Quaternion)
 	GetAngle() quaternion.Vec3
+	GetColor(axis quaternion.Quaternion) string
 }
 
 type Tile struct {
@@ -110,6 +112,32 @@ func (t *Tile) String() string {
 type Flat struct {
 	A     *Tile
 	Angle quaternion.Vec3
+}
+
+func (t *Tile) AxisToDirection(axis quaternion.Quaternion) (x, y, z float64) {
+	switch axis {
+	case XPlus:
+		x = 1
+	case XMinus:
+		x = -1
+	case YPlus:
+		y = 1
+	case YMinus:
+		y = -1
+	case ZPlus:
+		z = 1
+	case ZMinus:
+		z = -1
+	}
+	return
+}
+
+func (t *Flat) GetColor(axis quaternion.Quaternion) string {
+	x, y, z := t.A.AxisToDirection(axis)
+	if Equals(t.A.Alignment.X, x) && Equals(t.A.Alignment.Y, y) && Equals(t.A.Alignment.Z, z) {
+		return t.A.Color.String()
+	}
+	return Black.String()
 }
 
 func (t *Flat) String() string {
@@ -140,6 +168,17 @@ func (t *Ledge) GetAngle() quaternion.Vec3 {
 	return t.Angle
 }
 
+func (t *Ledge) GetColor(axis quaternion.Quaternion) string {
+	x, y, z := t.A.AxisToDirection(axis)
+	if Equals(t.A.Alignment.X, x) && Equals(t.A.Alignment.Y, y) && Equals(t.A.Alignment.Z, z) {
+		return t.A.Color.String()
+	}
+	if Equals(t.B.Alignment.X, x) && Equals(t.B.Alignment.Y, y) && Equals(t.B.Alignment.Z, z) {
+		return t.B.Color.String()
+	}
+	return Black.String()
+}
+
 func (t *Ledge) String() string {
 	return fmt.Sprintf("{L:%+1.f,%+1.f,%+1.f: %v, %v}", t.Angle.X, t.Angle.Y, t.Angle.Z, t.A, t.B)
 }
@@ -147,6 +186,20 @@ func (t *Ledge) String() string {
 type Edge struct {
 	A, B, C *Tile
 	Angle   quaternion.Vec3
+}
+
+func (t *Edge) GetColor(axis quaternion.Quaternion) string {
+	x, y, z := t.A.AxisToDirection(axis)
+	if Equals(t.A.Alignment.X, x) && Equals(t.A.Alignment.Y, y) && Equals(t.A.Alignment.Z, z) {
+		return t.A.Color.String()
+	}
+	if Equals(t.B.Alignment.X, x) && Equals(t.B.Alignment.Y, y) && Equals(t.B.Alignment.Z, z) {
+		return t.B.Color.String()
+	}
+	if Equals(t.C.Alignment.X, x) && Equals(t.C.Alignment.Y, y) && Equals(t.C.Alignment.Z, z) {
+		return t.C.Color.String()
+	}
+	return Black.String()
 }
 
 func (t *Edge) String() string {
@@ -211,7 +264,7 @@ func NewEdge(v quaternion.Vec3) *Edge {
 	}
 }
 
-func NewCubeTile(v quaternion.Vec3) Rotatable {
+func NewCubeTile(v quaternion.Vec3) CubeTile {
 	switch VectorSum(v) {
 	case 3:
 		return NewEdge(v)
@@ -223,7 +276,7 @@ func NewCubeTile(v quaternion.Vec3) Rotatable {
 	return nil
 }
 
-type Cube []Rotatable
+type Cube []CubeTile
 
 func NewCube() *Cube {
 	var cube = Cube{}
@@ -243,8 +296,9 @@ func NewCube() *Cube {
 func (c *Cube) String() string {
 	sb := strings.Builder{}
 	sb.WriteRune('\n')
-	for _, t := range *c {
+	for i, t := range *c {
 		if t, ok := t.(fmt.Stringer); ok {
+			sb.WriteString(fmt.Sprintf("%2d: ", i))
 			sb.WriteString(t.String())
 		} else {
 			sb.WriteString("-")
@@ -252,6 +306,34 @@ func (c *Cube) String() string {
 		sb.WriteRune('\n')
 	}
 	return sb.String()
+}
+
+func (c *Cube) Draw() string {
+	lines := []string{}
+	lines = append(lines, "    +---+")
+	lines = append(lines, fmt.Sprintf("    |%s%s%s|", c.TilesColor(-1, 1, -1, YPlus), c.TilesColor(0, 1, -1, YPlus), c.TilesColor(1, 1, -1, YPlus)))
+	lines = append(lines, fmt.Sprintf("    |%s%s%s|", c.TilesColor(-1, 1, 0, YPlus), c.TilesColor(0, 1, 0, YPlus), c.TilesColor(1, 1, 0, YPlus)))
+	lines = append(lines, fmt.Sprintf("    |%s%s%s|", c.TilesColor(-1, 1, 1, YPlus), c.TilesColor(0, 1, 1, YPlus), c.TilesColor(1, 1, 1, YPlus)))
+	lines = append(lines, "+---+---+---+---+")
+	lines = append(lines, fmt.Sprintf("|%s%s%s|%s%s%s|%s%s%s|%s%s%s|", c.TilesColor(-1, 1, -1, XMinus), c.TilesColor(-1, 1, 0, XMinus), c.TilesColor(-1, 1, 1, XMinus), c.TilesColor(-1, 1, 1, ZPlus), c.TilesColor(0, 1, 1, ZPlus), c.TilesColor(1, 1, 1, ZPlus), c.TilesColor(1, 1, 1, XPlus), c.TilesColor(1, 1, 0, XPlus), c.TilesColor(1, 1, -1, XPlus), c.TilesColor(1, 1, -1, ZMinus), c.TilesColor(0, 1, -1, ZMinus), c.TilesColor(-1, 1, -1, ZMinus)))
+	lines = append(lines, fmt.Sprintf("|%s%s%s|%s%s%s|%s%s%s|%s%s%s|", c.TilesColor(-1, 0, -1, XMinus), c.TilesColor(-1, 0, 0, XMinus), c.TilesColor(-1, 0, 1, XMinus), c.TilesColor(-1, 0, 1, ZPlus), c.TilesColor(0, 0, 1, ZPlus), c.TilesColor(1, 0, 1, ZPlus), c.TilesColor(1, 0, 1, XPlus), c.TilesColor(1, 0, 0, XPlus), c.TilesColor(1, 0, -1, XPlus), c.TilesColor(1, 0, -1, ZMinus), c.TilesColor(0, 0, -1, ZMinus), c.TilesColor(-1, 0, -1, ZMinus)))
+	lines = append(lines, fmt.Sprintf("|%s%s%s|%s%s%s|%s%s%s|%s%s%s|", c.TilesColor(-1, -1, -1, XMinus), c.TilesColor(-1, -1, 0, XMinus), c.TilesColor(-1, -1, 1, XMinus), c.TilesColor(-1, -1, 1, ZPlus), c.TilesColor(0, -1, 1, ZPlus), c.TilesColor(1, -1, 1, ZPlus), c.TilesColor(1, -1, 1, XPlus), c.TilesColor(1, -1, 0, XPlus), c.TilesColor(1, -1, -1, XPlus), c.TilesColor(1, -1, -1, ZMinus), c.TilesColor(0, -1, -1, ZMinus), c.TilesColor(-1, -1, -1, ZMinus)))
+	lines = append(lines, "+---+---+---+---+")
+	lines = append(lines, fmt.Sprintf("    |%s%s%s|", c.TilesColor(-1, -1, 1, YMinus), c.TilesColor(0, -1, 1, YMinus), c.TilesColor(1, -1, 1, YMinus)))
+	lines = append(lines, fmt.Sprintf("    |%s%s%s|", c.TilesColor(-1, -1, 0, YMinus), c.TilesColor(0, -1, 0, YMinus), c.TilesColor(1, -1, 0, YMinus)))
+	lines = append(lines, fmt.Sprintf("    |%s%s%s|", c.TilesColor(-1, -1, -1, YMinus), c.TilesColor(0, -1, -1, YMinus), c.TilesColor(1, -1, -1, YMinus)))
+	lines = append(lines, "    +---+")
+	return strings.Join(lines, "\n")
+}
+
+func (c *Cube) TilesColor(x, y, z float64, axis quaternion.Quaternion) string {
+	for _, t := range *c {
+		a := t.GetAngle()
+		if Equals(a.X, x) && Equals(a.Y, y) && Equals(a.Z, z) {
+			return t.GetColor(axis)
+		}
+	}
+	return Black.String()
 }
 
 func (c *Cube) Len() int {
@@ -295,15 +377,53 @@ func (c *Cube) Rotate(rot quaternion.Quaternion) {
 	sort.Sort(c)
 }
 
+func (c *Cube) RotateSlice(slice float64, rot quaternion.Quaternion) {
+	var x, y, z bool
+	switch rot {
+	case XPlus, XMinus:
+		x = true
+	case YPlus, YMinus:
+		y = true
+	case ZPlus, ZMinus:
+		z = true
+	}
+	log.Println("rot", x, y, z)
+	for _, t := range *c {
+		if x && Equals(t.GetAngle().X, slice) ||
+			y && Equals(t.GetAngle().Y, slice) ||
+			z && Equals(t.GetAngle().Z, slice) {
+			t.Rotate(rot)
+		}
+	}
+	sort.Sort(c)
+}
+
 func main() {
 	start := time.Now()
 
 	cube := NewCube()
-	for i := 0; i < 1419857*17; i++ {
-		cube.Rotate(XMinus)
+	log.Print("\n", cube.Draw())
+	rand.Seed(0)
+	for i := 0; i < 1000; i++ {
+		slice := rand.Intn(2) - 1
+		var axis quaternion.Quaternion
+		switch rand.Intn(6) {
+		case 0:
+			axis = XPlus
+		case 1:
+			axis = XMinus
+		case 2:
+			axis = YPlus
+		case 3:
+			axis = YMinus
+		case 4:
+			axis = ZPlus
+		case 5:
+			axis = ZMinus
+		}
+		cube.RotateSlice(float64(slice), axis)
 	}
-	log.Println(cube)
+	log.Print("\n", cube.Draw())
 
 	log.Println(time.Since(start))
-
 }
