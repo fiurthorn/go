@@ -12,17 +12,17 @@ import (
 	"github.com/westphae/quaternion"
 )
 
-/*
-         y    z
-         |   /
-         |  /
-         | /
--x ------+------ x
-        /|
-       / |
-      /  |
-    -z  -y
-*/
+// +-------------------+
+// |         y  -z	   |
+// |         |  /	   |
+// |         | /       |
+// |         |/        |
+// |-x ------+------ x |
+// |        /|         |
+// |       / |         |
+// |      /  |         |
+// |     z  -y         |
+// +-------------------+
 
 type Tint int
 
@@ -387,7 +387,6 @@ func (c *Cube) RotateSlice(slice float64, rot quaternion.Quaternion) {
 	case ZPlus, ZMinus:
 		z = true
 	}
-	log.Println("rot", x, y, z)
 	for _, t := range *c {
 		if x && Equals(t.GetAngle().X, slice) ||
 			y && Equals(t.GetAngle().Y, slice) ||
