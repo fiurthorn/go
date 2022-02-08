@@ -198,6 +198,9 @@ func calcHash(path string, h hash.Hash) (string, int64) {
 	defer file.Close()
 
 	stat, err := file.Stat()
+	if err != nil {
+		log.Printf("skip dir '%s' with error: %v", path, err)
+	}
 	size := stat.Size()
 
 	h.Reset()
