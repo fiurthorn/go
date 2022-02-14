@@ -1,3 +1,5 @@
+# yaml-language-server: $schema=aliases.schema
+
 # Template aliases.yaml file
 multi-target:
   # shortcut for the menu
@@ -11,7 +13,7 @@ multi-target:
 
 # target name
 target-one:
-  shortcut: 1
+  shortcut: "1"
   desc: example job one
 
   # the executable detectable on the System PATH or with full path
@@ -22,9 +24,9 @@ target-one:
 
   # array of arguments appended to args command line
   argsArray:
-    - 4
-    - 5
-    - 6
+    - "4"
+    - "5"
+    - "6"
 
   # key-value map of additional environment variable to the process
   environment:
@@ -38,7 +40,7 @@ target-one:
 
 target-two:
   desc: example job two
-  shortcut: 2
+  shortcut: "2"
   command: echo
   args: "a b c"
   argsArray:
