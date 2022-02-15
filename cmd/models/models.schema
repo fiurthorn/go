@@ -1,0 +1,277 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "http://intex.software/model.json",
+    "$comment": "https://www.jsonschema.net/home; https://json-schema.org/understanding-json-schema/index.html",
+    "type": "object",
+    "title": "The Model",
+    "description": "The model schema comprises the entire JSON document.",
+    "default": {},
+    "required": [
+        "meta",
+        "fields"
+    ],
+    "properties": {
+        "meta": {
+            "$id": "#/properties/meta",
+            "type": "object",
+            "title": "The meta schema",
+            "description": "description here",
+            "default": {},
+            "required": [],
+            "properties": {
+                "go": {
+                    "$id": "#/properties/meta/properties/go",
+                    "type": "object",
+                    "title": "The go schema",
+                    "description": "description here",
+                    "default": {},
+                    "required": [
+                        "package",
+                        "struct",
+                        "filename"
+                    ],
+                    "properties": {
+                        "package": {
+                            "$id": "#/properties/meta/properties/go/properties/package",
+                            "type": "string",
+                            "title": "The package schema",
+                            "description": "description here",
+                            "default": ""
+                        },
+                        "struct": {
+                            "$id": "#/properties/meta/properties/go/properties/struct",
+                            "type": "string",
+                            "title": "The struct schema",
+                            "description": "description here",
+                            "default": ""
+                        },
+                        "filename": {
+                            "$id": "#/properties/meta/properties/go/properties/filename",
+                            "type": "string",
+                            "title": "The filename schema",
+                            "description": "description here",
+                            "default": ""
+                        },
+                        "import": {
+                            "$id": "#/properties/import",
+                            "type": "array",
+                            "title": "The import schema",
+                            "description": "An explanation about the purpose of this instance.",
+                            "default": [],
+                            "examples": [
+                                [
+                                    "123",
+                                    "456"
+                                ]
+                            ],
+                            "additionalItems": true,
+                            "items": {
+                                "$id": "#/properties/import/items",
+                                "anyOf": [
+                                    {
+                                        "$id": "#/properties/import/items/anyOf/0",
+                                        "type": "string",
+                                        "title": "The first anyOf schema",
+                                        "description": "An explanation about the purpose of this instance.",
+                                        "default": "",
+                                        "examples": [
+                                            "123",
+                                            "456"
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "dart": {
+                    "$id": "#/properties/meta/properties/dart",
+                    "type": "object",
+                    "title": "The dart schema",
+                    "description": "description here",
+                    "default": {},
+                    "required": [
+                        "implementation",
+                        "interface"
+                    ],
+                    "properties": {
+                        "implementation": {
+                            "$id": "#/properties/meta/properties/dart/properties/implementation",
+                            "type": "object",
+                            "title": "The implementation schema",
+                            "description": "description here",
+                            "default": {},
+                            "required": [
+                                "class",
+                                "filename"
+                            ],
+                            "properties": {
+                                "class": {
+                                    "$id": "#/properties/meta/properties/dart/properties/implementation/properties/class",
+                                    "type": "string",
+                                    "title": "The class schema",
+                                    "description": "description here",
+                                    "default": ""
+                                },
+                                "filename": {
+                                    "$id": "#/properties/meta/properties/dart/properties/implementation/properties/filename",
+                                    "type": "string",
+                                    "title": "The filename schema",
+                                    "description": "description here",
+                                    "default": ""
+                                },
+                                "import": {
+                                    "$id": "#/properties/import",
+                                    "type": "array",
+                                    "title": "The import schema",
+                                    "description": "An explanation about the purpose of this instance.",
+                                    "default": [],
+                                    "additionalItems": true,
+                                    "items": {
+                                        "$id": "#/properties/import/items",
+                                        "anyOf": [
+                                            {
+                                                "$id": "#/properties/import/items/anyOf/0",
+                                                "type": "string",
+                                                "title": "The first anyOf schema",
+                                                "description": "An explanation about the purpose of this instance.",
+                                                "default": "",
+                                                "examples": [
+                                                    "123",
+                                                    "456"
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                }
+                            },
+                            "additionalProperties": false
+                        },
+                        "interface": {
+                            "$id": "#/properties/meta/properties/dart/properties/interface",
+                            "type": "object",
+                            "title": "The interface schema",
+                            "description": "description here",
+                            "default": {},
+                            "required": [
+                                "class",
+                                "filename"
+                            ],
+                            "properties": {
+                                "class": {
+                                    "$id": "#/properties/meta/properties/dart/properties/interface/properties/class",
+                                    "type": "string",
+                                    "title": "The class schema",
+                                    "description": "description here",
+                                    "default": ""
+                                },
+                                "filename": {
+                                    "$id": "#/properties/meta/properties/dart/properties/interface/properties/filename",
+                                    "type": "string",
+                                    "title": "The filename schema",
+                                    "description": "description here",
+                                    "default": ""
+                                },
+                                "package": {
+                                    "$id": "#/properties/meta/properties/dart/properties/interface/properties/package",
+                                    "type": "string",
+                                    "title": "The package schema",
+                                    "description": "description here",
+                                    "default": ""
+                                }
+                            },
+                            "additionalProperties": false
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "inherit": {
+                    "$id": "#/properties/meta/properties/inherit",
+                    "type": "string",
+                    "title": "The inherit schema",
+                    "description": "description here.",
+                    "default": ""
+                }
+            },
+            "additionalProperties": false
+        },
+        "fields": {
+            "$id": "#/properties/fields",
+            "type": "array",
+            "title": "The fields schema",
+            "description": "description here",
+            "default": [],
+            "additionalItems": true,
+            "items": {
+                "$id": "#/properties/fields/items",
+                "anyOf": [
+                    {
+                        "$id": "#/properties/fields/items/anyOf/0",
+                        "type": "object",
+                        "title": "The first anyOf schema",
+                        "description": "description here",
+                        "default": {},
+                        "required": [
+                            "name",
+                            "type"
+                        ],
+                        "properties": {
+                            "fromJson": {
+                                "$id": "#/properties/fields/items/anyOf/0/properties/FromJson",
+                                "type": "string",
+                                "title": "The FromJson schema",
+                                "description": "description here",
+                                "default": ""
+                            },
+                            "toJson": {
+                                "$id": "#/properties/fields/items/anyOf/0/properties/toJson",
+                                "type": "string",
+                                "title": "The toJson schema",
+                                "description": "description here",
+                                "default": ""
+                            },
+                            "dart": {
+                                "$id": "#/properties/fields/items/anyOf/0/properties/dart",
+                                "type": "string",
+                                "title": "The dart schema",
+                                "description": "description here",
+                                "default": ""
+                            },
+                            "go": {
+                                "$id": "#/properties/fields/items/anyOf/0/properties/go",
+                                "type": "string",
+                                "title": "The go schema",
+                                "description": "description here",
+                                "default": ""
+                            },
+                            "name": {
+                                "$id": "#/properties/fields/items/anyOf/0/properties/name",
+                                "type": "string",
+                                "title": "The name schema",
+                                "description": "description here",
+                                "default": ""
+                            },
+                            "type": {
+                                "$id": "#/properties/fields/items/anyOf/0/properties/type",
+                                "type": "string",
+                                "title": "The type schema",
+                                "description": "description here",
+                                "default": "",
+                                "enum": [
+                                    "String",
+                                    "Float64",
+                                    "Bool",
+                                    "DateTime",
+                                    "Array"
+                                ]
+                            }
+                        },
+                        "additionalProperties": false
+                    }
+                ]
+            }
+        }
+    },
+    "additionalProperties": false
+}

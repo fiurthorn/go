@@ -51,8 +51,6 @@ func (c *Command) Done() {
 	c.done = true
 }
 
-var Restart bool = true
-
 func Max(a, b int) int {
 	if a >= b {
 		return a
@@ -205,7 +203,6 @@ func signalHandler() {
 	stopped = true
 	log.Printf("Caught signal %v for %d processes", sig, len(processes))
 
-	Restart = false
 	sendSignal(syscall.SIGTERM)
 	log.Printf("Wait 5 Sec to SIGKILL")
 	time.Sleep(5 * time.Second)
@@ -324,12 +321,12 @@ func callCommand(alias *Command) {
 		} else {
 			log.Printf("don't inherit Stdin to %s", executable)
 		}
-		log.Printf("$ '%s' in %+v with %+v %v [%v]", strings.Join(alias.process.Args, "' '"), alias.process.Dir, alias.Environment, ab(alias.Restart && Restart, "restart", ""), ab(alias.Background, "bg", "fg"))
+		log.Printf("$ '%s' in %+v with %+v %v [%v]", strings.Join(alias.process.Args, "' '"), alias.process.Dir, alias.Environment, ab(alias.Restart && !stopped, "restart", ""), ab(alias.Background, "bg", "fg"))
 		alias.process.Start()
 
-		if !alias.Background || (alias.Restart && Restart) {
+		if !alias.Background || (alias.Restart && !stopped) {
 			waitProc(alias)
-			if !Restart || !alias.Restart {
+			if stopped || !alias.Restart {
 				break
 			}
 			if alias.process != nil && alias.process.ProcessState != nil && !alias.process.ProcessState.Exited() {
