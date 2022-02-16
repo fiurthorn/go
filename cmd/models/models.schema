@@ -261,6 +261,7 @@
                                 "enum": [
                                     "String",
                                     "Float64",
+                                    "Int64",
                                     "Bool",
                                     "DateTime",
                                     "Array"

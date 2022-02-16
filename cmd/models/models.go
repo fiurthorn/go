@@ -130,10 +130,6 @@ func (m *Model) loadFieldData(basepath string, inherit string, fields []Field) e
 		m.Meta.Go.Fields = append(m.Meta.Go.Fields, field)
 		m.Meta.Dart.Interface.Fields = append(m.Meta.Dart.Interface.Fields, field)
 		m.Meta.Dart.Implementation.Fields = append(m.Meta.Dart.Implementation.Fields, field)
-
-		if field.Type == TypeDateTime {
-			m.Meta.Go.Import = append(m.Meta.Go.Import, "intex.software/preform/lib")
-		}
 	}
 
 	return nil
@@ -372,6 +368,7 @@ var goTemplateData string
 var (
 	TypeString   = "String"
 	TypeFloat64  = "Float64"
+	TypeInt64    = "Int64"
 	TypeBool     = "Bool"
 	TypeDateTime = "DateTime"
 	TypeArray    = "Array"
@@ -381,8 +378,9 @@ func LoadGoTemplate() (*ModelTemplate, error) {
 	var typeMap = map[string]string{
 		TypeString:   "string",
 		TypeFloat64:  "float64",
+		TypeInt64:    "int64",
 		TypeBool:     "bool{}",
-		TypeDateTime: "*lib.CustomTime",
+		TypeDateTime: "*CustomTime",
 		TypeArray:    "[]string",
 	}
 
@@ -420,6 +418,7 @@ func LoadDartTemplates() (impl *ModelTemplate, iface *ModelTemplate, err error) 
 	var typeMap = map[string]string{
 		TypeString:   "String",
 		TypeFloat64:  "double",
+		TypeInt64:    "int",
 		TypeBool:     "bool",
 		TypeDateTime: "DateTime",
 		TypeArray:    "List<String>",
