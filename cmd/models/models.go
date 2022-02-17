@@ -29,6 +29,8 @@ type Field struct {
 	Dart     string `json:"dart"`
 	Go       string `json:"go"`
 	Type     string `json:"type"`
+	GoType   string `json:"goType"`
+	DartType string `json:"dartType"`
 	FromJson string `json:"fromJson"`
 	ToJson   string `json:"toJson"`
 }
@@ -108,8 +110,15 @@ func (m *Model) AdjustData(path string) error {
 	}
 	m.Meta.Dart.Implementation.Interface = m.Meta.Dart.Interface.Class
 
+	for i, length := 0, len(m.Meta.Dart.Interface.Import); i < length; i++ {
+		m.Meta.Dart.Interface.Import[i] = fmt.Sprintf("package:%s/%s", m.Meta.Dart.Interface.Package, m.Meta.Dart.Interface.Import[i])
+	}
+
 	ifaceFilePath, _ := filepath.Rel(BaseDartDir, filepath.Join(BaseDir, m.Meta.Dart.Interface.Filename))
-	m.Meta.Dart.Implementation.Import = append(m.Meta.Dart.Implementation.Import, fmt.Sprintf("package:%s/%s", m.Meta.Dart.Interface.Package, filepath.ToSlash(ifaceFilePath)))
+	m.Meta.Dart.Implementation.Import = append(m.Meta.Dart.Implementation.Import, filepath.ToSlash(ifaceFilePath))
+	for i, length := 0, len(m.Meta.Dart.Implementation.Import); i < length; i++ {
+		m.Meta.Dart.Implementation.Import[i] = fmt.Sprintf("package:%s/%s", m.Meta.Dart.Interface.Package, m.Meta.Dart.Implementation.Import[i])
+	}
 
 	return nil
 }
@@ -395,7 +404,7 @@ func LoadGoTemplate() (*ModelTemplate, error) {
 		if ok {
 			return value
 		}
-		return "undefined"
+		return key
 	}
 
 	m, err := template.New("go").
@@ -429,7 +438,7 @@ func LoadDartTemplates() (impl *ModelTemplate, iface *ModelTemplate, err error) 
 		if ok {
 			return value
 		}
-		return "undefined"
+		return key
 	}
 
 	baseGenName := func(filename string) string {

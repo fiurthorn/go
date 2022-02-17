@@ -6,5 +6,5 @@ package {{.Package}}
 ){{end}}
 
 type {{.Struct}} struct { {{range .Fields}}
-  {{if .Go}}{{.Go}}{{else}}{{camelCase .Name}}{{end}} {{goType .Type}} `json:"{{.Name}}"`{{end}}
+  {{if .Go}}{{.Go}}{{else}}{{camelCase .Name}}{{end}} {{if .GoType}}{{.GoType}}{{else}}{{goType .Type}}{{end}} `json:"{{.Name}}"`{{end}}
 }

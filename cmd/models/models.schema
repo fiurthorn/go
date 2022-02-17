@@ -7,7 +7,6 @@
     "description": "The model schema comprises the entire JSON document.",
     "default": {},
     "required": [
-        "meta",
         "fields"
     ],
     "properties": {
@@ -179,6 +178,30 @@
                                     "title": "The package schema",
                                     "description": "description here",
                                     "default": ""
+                                },
+                                "import": {
+                                    "$id": "#/properties/import",
+                                    "type": "array",
+                                    "title": "The import schema",
+                                    "description": "An explanation about the purpose of this instance.",
+                                    "default": [],
+                                    "additionalItems": true,
+                                    "items": {
+                                        "$id": "#/properties/import/items",
+                                        "anyOf": [
+                                            {
+                                                "$id": "#/properties/import/items/anyOf/0",
+                                                "type": "string",
+                                                "title": "The first anyOf schema",
+                                                "description": "An explanation about the purpose of this instance.",
+                                                "default": "",
+                                                "examples": [
+                                                    "123",
+                                                    "456"
+                                                ]
+                                            }
+                                        ]
+                                    }
                                 }
                             },
                             "additionalProperties": false
@@ -245,6 +268,20 @@
                                 "description": "description here",
                                 "default": ""
                             },
+                            "goType": {
+                                "$id": "#/properties/fields/items/anyOf/0/properties/goType",
+                                "type": "string",
+                                "title": "The goType schema",
+                                "description": "description here",
+                                "default": ""
+                            },
+                            "dartType": {
+                                "$id": "#/properties/fields/items/anyOf/0/properties/dartType",
+                                "type": "string",
+                                "title": "The dartType schema",
+                                "description": "description here",
+                                "default": ""
+                            },
                             "name": {
                                 "$id": "#/properties/fields/items/anyOf/0/properties/name",
                                 "type": "string",
@@ -258,13 +295,20 @@
                                 "title": "The type schema",
                                 "description": "description here",
                                 "default": "",
-                                "enum": [
-                                    "String",
-                                    "Float64",
-                                    "Int64",
-                                    "Bool",
-                                    "DateTime",
-                                    "Array"
+                                "oneOf": [
+                                    {
+                                        "type": "string"
+                                    },
+                                    {
+                                        "enum": [
+                                            "String",
+                                            "Float64",
+                                            "Int64",
+                                            "Bool",
+                                            "DateTime",
+                                            "Array"
+                                        ]
+                                    }
                                 ]
                             }
                         },

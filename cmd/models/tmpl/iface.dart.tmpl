@@ -5,5 +5,5 @@ import 'package:equatable/equatable.dart';
 import '{{.}}';{{end}}{{end}}
 
 abstract class {{.Class}} extends Equatable { {{range .Fields}}
-  {{dartType .Type}} get {{if .Dart}}{{.Dart}}{{else}}{{snakeCase .Name}}{{end}};{{end}}
+  {{if .DartType}}{{.DartType}}{{else}}{{dartType .Type}}{{end}} get {{if .Dart}}{{.Dart}}{{else}}{{snakeCase .Name}}{{end}};{{end}}
 }
