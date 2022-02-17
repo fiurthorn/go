@@ -295,20 +295,13 @@
                                 "title": "The type schema",
                                 "description": "description here",
                                 "default": "",
-                                "oneOf": [
-                                    {
-                                        "type": "string"
-                                    },
-                                    {
-                                        "enum": [
-                                            "String",
-                                            "Float64",
-                                            "Int64",
-                                            "Bool",
-                                            "DateTime",
-                                            "Array"
-                                        ]
-                                    }
+                                "enum": [
+                                    "String",
+                                    "Float64",
+                                    "Int64",
+                                    "Bool",
+                                    "DateTime",
+                                    "Array"
                                 ]
                             }
                         },

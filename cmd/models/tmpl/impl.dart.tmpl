@@ -18,7 +18,7 @@ class {{.Class}} extends Equatable implements {{.Interface}} {
   {{- range .Fields}}
   @override
   @JsonKey(name: "{{.Name}}"{{if .FromJson}}, fromJson: {{.FromJson}}{{end}}{{if .ToJson}}, toJson: {{.ToJson}}{{end}})
-  final {{if .DartType}}{{.DartType}}{{else}}{{dartType .Type}}{{end}} {{if .Dart}}{{.Dart}}{{else}}{{snakeCase .Name}}{{end}};
+  final {{if .DartImplType}}{{.DartImplType}}{{else}}{{dartType .Type}}{{end}} {{if .Dart}}{{.Dart}}{{else}}{{snakeCase .Name}}{{end}};
   {{end}}
   const {{.Class}}({ {{range .Fields}}
     required this.{{if .Dart}}{{.Dart}}{{else}}{{snakeCase .Name}}{{end}},{{end}}

@@ -26,13 +26,14 @@ import (
 type Field struct {
 	Name string `json:"name"`
 
-	Dart     string `json:"dart"`
-	Go       string `json:"go"`
-	Type     string `json:"type"`
-	GoType   string `json:"goType"`
-	DartType string `json:"dartType"`
-	FromJson string `json:"fromJson"`
-	ToJson   string `json:"toJson"`
+	Dart          string `json:"dart"`
+	Go            string `json:"go"`
+	Type          string `json:"type"`
+	GoType        string `json:"goType"`
+	DartIfaceType string `json:"dartIfaceType"`
+	DartImplType  string `json:"dartImplType"`
+	FromJson      string `json:"fromJson"`
+	ToJson        string `json:"toJson"`
 }
 
 var (
@@ -109,6 +110,7 @@ func (m *Model) AdjustData(path string) error {
 		return err
 	}
 	m.Meta.Dart.Implementation.Interface = m.Meta.Dart.Interface.Class
+	m.Meta.Dart.Implementation.Import = append(m.Meta.Dart.Implementation.Import, m.Meta.Dart.Interface.Import...)
 
 	for i, length := 0, len(m.Meta.Dart.Interface.Import); i < length; i++ {
 		m.Meta.Dart.Interface.Import[i] = fmt.Sprintf("package:%s/%s", m.Meta.Dart.Interface.Package, m.Meta.Dart.Interface.Import[i])
