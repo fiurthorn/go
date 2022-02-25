@@ -2,12 +2,22 @@
 
 import 'dart:convert';
 import 'package:equatable/equatable.dart';
+import 'package:json_annotation/json_annotation.dart';
 {{- with .Import}}{{range .}}
 import '{{.}}';{{end}}{{end}}
 
+part '{{baseGName .Filename}}.g.dart';
+
+@JsonSerializable(
+  createToJson: true,
+  disallowUnrecognizedKeys: true,
+  explicitToJson: true,
+  ignoreUnannotated: true,
+)
 class {{.Class}} extends Equatable implements {{.Interface}} {
   {{- range .Fields}}
   @override
+  @JsonKey(name: "{{.Name}}"{{if .FromJson}}, fromJson: {{.FromJson}}{{end}}{{if .ToJson}}, toJson: {{.ToJson}}{{end}})
   final {{if .DartImplType}}{{.DartImplType}}{{else}}{{dartType .Type}}{{end}} {{if .Dart}}{{.Dart}}{{else}}{{snakeCase .Name}}{{end}};
   {{end}}
   const {{.Class}}({ {{range .Fields}}
@@ -16,4 +26,11 @@ class {{.Class}} extends Equatable implements {{.Interface}} {
 
   @override
   List<Object> get props => [{{range .Fields}}{{if .Dart}}{{.Dart}}{{else}}{{snakeCase .Name}}{{end}},{{end}}];
+
+  factory {{.Class}}.fromString(String json) => _${{.Class}}FromJson(jsonDecode(json));
+  factory {{.Class}}.fromJson(Map<String, dynamic> json) => _${{.Class}}FromJson(json);
+
+  @override
+  toString() => jsonEncode(_${{.Class}}ToJson(this));
+  toJson() => _${{.Class}}ToJson(this);
 }

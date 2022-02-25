@@ -426,7 +426,7 @@ var dartIfaceData string
 //go:embed tmpl/jsonImpl.dart.tmpl
 var dartJsonImplData string
 
-//go:embed tmpl/impl.dart.tmpl
+//go:embed tmpl/nojsonImpl.dart.tmpl
 var dartNojsonImplData string
 
 func LoadDartTemplates() (noJson, impl, iface *ModelTemplate, err error) {
@@ -473,6 +473,7 @@ func LoadDartTemplates() (noJson, impl, iface *ModelTemplate, err error) {
 	tmpl, err = template.New("dart_impl_nojson").
 		Funcs(map[string]interface{}{
 			"dartType":  types,
+			"baseGName": baseGenName,
 			"snakeCase": snakeCase,
 		}).
 		Parse(dartNojsonImplData)
@@ -549,7 +550,7 @@ func evaluate(path string, inherit bool) error {
 	if len(schema.Meta.Dart.Implementation.Filename) > 0 {
 		log.Println("emit dart implementation", tag, schema.Meta.Dart.Implementation.Class)
 		if schema.Meta.Dart.Implementation.NoJson {
-			err = dartJsonImplTemplate.Eval(filepath.Join(BaseDir, schema.Meta.Dart.Implementation.Filename), schema.Meta.Dart.Implementation)
+			err = dartNojsonImplTemplate.Eval(filepath.Join(BaseDir, schema.Meta.Dart.Implementation.Filename), schema.Meta.Dart.Implementation)
 		} else {
 			err = dartJsonImplTemplate.Eval(filepath.Join(BaseDir, schema.Meta.Dart.Implementation.Filename), schema.Meta.Dart.Implementation)
 		}
