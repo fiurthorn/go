@@ -111,7 +111,7 @@ func (m *Model) AdjustData(path string) error {
 		return err
 	}
 	m.Meta.Dart.Implementation.Interface = m.Meta.Dart.Interface.Class
-	m.Meta.Dart.Implementation.Import = append(m.Meta.Dart.Implementation.Import, m.Meta.Dart.Interface.Import...)
+	// m.Meta.Dart.Implementation.Import = append(m.Meta.Dart.Implementation.Import, m.Meta.Dart.Interface.Import...)
 
 	for i, length := 0, len(m.Meta.Dart.Interface.Import); i < length; i++ {
 		m.Meta.Dart.Interface.Import[i] = fmt.Sprintf("package:%s/%s", m.Meta.Dart.Interface.Package, m.Meta.Dart.Interface.Import[i])
