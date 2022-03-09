@@ -6,9 +6,7 @@
     "title": "The Model",
     "description": "The model schema comprises the entire JSON document.",
     "default": {},
-    "required": [
-        "fields"
-    ],
+    "required": [],
     "properties": {
         "meta": {
             "$id": "#/properties/meta",
@@ -117,6 +115,13 @@
                                     "$id": "#/properties/meta/properties/dart/properties/implementation/properties/filename",
                                     "type": "string",
                                     "title": "The filename schema",
+                                    "description": "description here",
+                                    "default": ""
+                                },
+                                "noJson": {
+                                    "$id": "#/properties/meta/properties/dart/properties/implementation/properties/noJson",
+                                    "type": "boolean",
+                                    "title": "The noJson schema",
                                     "description": "description here",
                                     "default": ""
                                 },

@@ -1,0 +1,18 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+import 'package:equatable/equatable.dart';
+{{- with .Import}}{{range .}}
+import '{{.}}';{{end}}{{end}}
+
+class {{.Class}} extends Equatable implements {{.Interface}} {
+  {{- range .Fields}}
+  @override
+  final {{if .DartImplType}}{{.DartImplType}}{{else}}{{dartType .Type}}{{end}} {{if .Dart}}{{.Dart}}{{else}}{{snakeCase .Name}}{{end}};
+  {{end}}
+  const {{.Class}}({ {{range .Fields}}
+    required this.{{if .Dart}}{{.Dart}}{{else}}{{snakeCase .Name}}{{end}},{{end}}
+  });
+
+  @override
+  List<Object> get props => [{{range .Fields}}{{if .Dart}}{{.Dart}}{{else}}{{snakeCase .Name}}{{end}},{{end}}];
+}

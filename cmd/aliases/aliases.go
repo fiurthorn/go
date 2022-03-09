@@ -209,8 +209,8 @@ func signalHandler() {
 	sendSignal(syscall.SIGKILL)
 
 	log.Printf("done")
-
 	wg.Done()
+	os.Exit(0)
 }
 
 var processes = []*Command{}

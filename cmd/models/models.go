@@ -60,6 +60,7 @@ type Model struct {
 				Class    string   `json:"class"`
 				Import   []string `json:"import"`
 				Filename string   `json:"filename"`
+				NoJson   bool     `json:"noJson"`
 
 				Interface string
 				Fields    []Field
@@ -110,7 +111,7 @@ func (m *Model) AdjustData(path string) error {
 		return err
 	}
 	m.Meta.Dart.Implementation.Interface = m.Meta.Dart.Interface.Class
-	m.Meta.Dart.Implementation.Import = append(m.Meta.Dart.Implementation.Import, m.Meta.Dart.Interface.Import...)
+	// m.Meta.Dart.Implementation.Import = append(m.Meta.Dart.Implementation.Import, m.Meta.Dart.Interface.Import...)
 
 	for i, length := 0, len(m.Meta.Dart.Interface.Import); i < length; i++ {
 		m.Meta.Dart.Interface.Import[i] = fmt.Sprintf("package:%s/%s", m.Meta.Dart.Interface.Package, m.Meta.Dart.Interface.Import[i])
@@ -422,10 +423,13 @@ func LoadGoTemplate() (*ModelTemplate, error) {
 //go:embed tmpl/iface.dart.tmpl
 var dartIfaceData string
 
-//go:embed tmpl/impl.dart.tmpl
-var dartImplData string
+//go:embed tmpl/jsonImpl.dart.tmpl
+var dartJsonImplData string
 
-func LoadDartTemplates() (impl *ModelTemplate, iface *ModelTemplate, err error) {
+//go:embed tmpl/nojsonImpl.dart.tmpl
+var dartNojsonImplData string
+
+func LoadDartTemplates() (noJson, impl, iface *ModelTemplate, err error) {
 	var typeMap = map[string]string{
 		TypeString:   "String",
 		TypeFloat64:  "double",
@@ -460,11 +464,23 @@ func LoadDartTemplates() (impl *ModelTemplate, iface *ModelTemplate, err error) 
 			"baseGName": baseGenName,
 			"snakeCase": snakeCase,
 		}).
-		Parse(dartImplData)
+		Parse(dartJsonImplData)
 	if err != nil {
 		return
 	}
 	impl = &ModelTemplate{tmpl}
+
+	tmpl, err = template.New("dart_impl_nojson").
+		Funcs(map[string]interface{}{
+			"dartType":  types,
+			"baseGName": baseGenName,
+			"snakeCase": snakeCase,
+		}).
+		Parse(dartNojsonImplData)
+	if err != nil {
+		return
+	}
+	noJson = &ModelTemplate{tmpl}
 
 	tmpl, err = template.New("dart_iface").
 		Funcs(map[string]interface{}{
@@ -481,9 +497,10 @@ func LoadDartTemplates() (impl *ModelTemplate, iface *ModelTemplate, err error) 
 }
 
 var (
-	goTemplate        *ModelTemplate
-	dartIfaceTemplate *ModelTemplate
-	dartImplTemplate  *ModelTemplate
+	goTemplate             *ModelTemplate
+	dartIfaceTemplate      *ModelTemplate
+	dartJsonImplTemplate   *ModelTemplate
+	dartNojsonImplTemplate *ModelTemplate
 )
 
 func initTemplates() (err error) {
@@ -492,7 +509,7 @@ func initTemplates() (err error) {
 		return
 	}
 
-	dartImplTemplate, dartIfaceTemplate, err = LoadDartTemplates()
+	dartNojsonImplTemplate, dartJsonImplTemplate, dartIfaceTemplate, err = LoadDartTemplates()
 	if err != nil {
 		return
 	}
@@ -532,7 +549,11 @@ func evaluate(path string, inherit bool) error {
 
 	if len(schema.Meta.Dart.Implementation.Filename) > 0 {
 		log.Println("emit dart implementation", tag, schema.Meta.Dart.Implementation.Class)
-		err = dartImplTemplate.Eval(filepath.Join(BaseDir, schema.Meta.Dart.Implementation.Filename), schema.Meta.Dart.Implementation)
+		if schema.Meta.Dart.Implementation.NoJson {
+			err = dartNojsonImplTemplate.Eval(filepath.Join(BaseDir, schema.Meta.Dart.Implementation.Filename), schema.Meta.Dart.Implementation)
+		} else {
+			err = dartJsonImplTemplate.Eval(filepath.Join(BaseDir, schema.Meta.Dart.Implementation.Filename), schema.Meta.Dart.Implementation)
+		}
 		if err != nil {
 			return err
 		}
