@@ -1,18 +1,54 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"log"
+	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"sync"
 	"time"
 )
 
-const (
-	n = 8
+var (
+	n int = 8
+	m int
+	q float32
+
+	ruler = []rune("0123456789abcdefghijklmnopqrstuvwxyz")
+)
+var (
+	fields *Fields
+
+	solution = Solution{}
+	uniq     = Uniq{queue: make(chan Solution, 100)}
+	all      = Solutions{}
+
+	iterationCount int
+	solutionCount  int
+)
+
+func init() {
+	flag.CommandLine.Usage = func() {
+		exec, _ := os.Executable()
+		fmt.Println("Usage of", filepath.Base(exec))
+		flag.PrintDefaults()
+	}
+	flag.IntVar(&n, "size", 8, "game size board")
+	flag.Parse()
+
+	if n > len(ruler) {
+		log.Panicf("maximum size of %d exceeded", len(ruler))
+	}
+	if n <= 0 {
+		log.Panicf("minimum size of 1 undercut")
+	}
 	m = n - 1
 	q = float32(m) / 2
-)
+	fields = NewFields()
+}
 
 type Fields []rune
 
@@ -31,19 +67,17 @@ func (f *Fields) Draw(sol Solution) *Fields {
 	return f
 }
 
-var lineal = []rune("0123456789abcdefghijklmnopqrstuvwxyz")
-
 func (f *Fields) String() string {
 	sb := strings.Builder{}
 
 	sb.WriteString("\ny x")
 	for i := 0; i < n; i++ {
-		sb.WriteRune(lineal[i])
+		sb.WriteRune(ruler[i])
 	}
 	sb.WriteString("\n")
 	for i := 0; i < n; i++ {
 		line := (*f)[n*i : n+n*i]
-		sb.WriteRune(lineal[i])
+		sb.WriteRune(ruler[i])
 		sb.WriteString("  ")
 		sb.WriteString(string(line))
 		sb.WriteRune('\n')
@@ -183,19 +217,9 @@ func (x *Uniq) mirror4(sol Solution) Solution {
 	return d
 }
 
-var (
-	fields = NewFields()
-
-	solution = Solution{}
-	uniq     = Uniq{queue: make(chan Solution, 100)}
-	all      = Solutions{}
-
-	iterationCount int
-	solutionCount  int
-)
-
 func main() {
 	uniq.Start(5)
+
 	start := time.Now()
 	set(0)
 	uniq.Stop()
@@ -203,7 +227,7 @@ func main() {
 		log.Println(NewFields().Draw(u))
 	}
 	duration := time.Since(start)
-	log.Printf("result %s %v %v %v %v", duration, iterationCount, solutionCount, len(all.data), len(uniq.data))
+	log.Printf("duration:%s iterations:%v solutions:%v|%v uniq:%v", duration, iterationCount, solutionCount, len(all.data), len(uniq.data))
 }
 
 func set(y int) {
