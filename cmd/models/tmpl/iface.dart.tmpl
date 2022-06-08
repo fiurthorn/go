@@ -1,9 +1,0 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
-
-import 'package:equatable/equatable.dart';
-{{- with .Import}}{{range .}}
-import '{{.}}';{{end}}{{end}}
-
-abstract class {{.Class}} extends Equatable { {{range .Fields}}
-  {{if .DartIfaceType}}{{.DartIfaceType}}{{else}}{{dartType .Type}}{{end}} get {{if .Dart}}{{.Dart}}{{else}}{{snakeCase .Name}}{{end}};{{end}}
-}
