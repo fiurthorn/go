@@ -150,11 +150,13 @@ func builder() {
 }
 
 func walker(path string, entry fs.DirEntry, err error) error {
-	if entry.IsDir() {
-		WatchDirs.Add(path)
-		return nil
+	if err != nil {
+		return err
 	}
-	return err
+	if entry != nil && entry.IsDir() {
+		WatchDirs.Add(path)
+	}
+	return nil
 }
 
 var modTimes = ModTimestamps{Map: map[string]int64{}}

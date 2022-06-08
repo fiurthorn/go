@@ -346,7 +346,7 @@ func main() {
 	flag.StringVar(&flags.RecipientsFile, "r", "", "recipient (shorthand)")
 
 	flag.StringVar(&flags.Task, "task", "keygen", "the task which is executed\none of: keygen,build,encrypt,recrypt\n")
-	flag.StringVar(&flags.SecretFile, "secret", "secret.txt", "file with encrypted secret\nused by: encrypt,recrypt,decrypt,build")
+	flag.StringVar(&flags.SecretFile, "secret", "secret.txt", "file with encrypted secret\nused by: encrypt,build")
 	flag.StringVar(&flags.PlainFile, "plain", "plain.txt", "plain clear input file\nused by: encrypt")
 	flag.StringVar(&flags.IdentitiesFile, "identities", "identity.key", "Path to file with Identities\nused by: keygen,encrypt,recrypt\n")
 	flag.StringVar(&flags.RecipientsFile, "recipients", "recipients.key", "Path to file with Recipients\nused by: keygen,recrypt,build\n")
