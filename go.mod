@@ -1,6 +1,6 @@
 module github.com/fiurthorn/go
 
-go 1.17
+go 1.18
 
 require (
 	github.com/timshannon/badgerhold/v4 v4.0.1
